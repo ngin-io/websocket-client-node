@@ -1,0 +1,9 @@
+{
+  "name": "websocket-client-node",
+  "description": "",
+  "version": "0.0.1",
+  "dependencies": {
+    "crypto": "1.0.1",
+    "socket.io-client": "2.2.0"
+  }
+}
