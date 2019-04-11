@@ -1,25 +1,20 @@
-var crypto = require('crypto');
+const crypto = require('crypto');
+const WebSocket = require('ws');
 
-const baseUrl = 'https://socket.btcmarkets.net';
-const path = '/v2';
-const channels = ['tick', 'heartbeat'];
-const marketIds = ['BTC-AUD', 'LTC-AUD'];
+const baseUrl = 'wss://socket.btcmarkets.net/v2';
+const channels = ['trade', 'heartbeat'];
+const marketIds = ['BTC-AUD', 'ETH-AUD', 'LTC-AUD'];
+
 // if using private channels then set api key and secret for authentication
 const key = undefined;
-const secret = '';
+const secret = 'add your API key secret here';
 
-
-var socket = require('socket.io-client')(baseUrl, {
-    secure: true,
-    transports: ['websocket'],
-    upgrade: false,
-    path: path
-});
-
+const ws = new WebSocket(baseUrl);
 
 var request = {
     marketIds:marketIds,
-    channels: channels
+    channels: channels,
+    messageType: 'subscribe'
 }
 
 if (key) {
@@ -31,25 +26,24 @@ if (key) {
     request.signature = signature;
 }
 
-socket.on('connect', function(){
-    socket.emit('subscribe', request);
+ws.on('open', function open() {
+    ws.send(JSON.stringify(request));
 });
 
-socket.on('error', function(err){
-    console.log(err);
-});
-
-socket.on('message', function(data){
+ws.on('message', function incoming(data) {
     console.log(data);
 });
 
-socket.on('disconnect', function(){
-    console.log('disconnected');
+ws.on('close', function close() {
+    console.log('socket closed');
 });
 
+ws.on('error', function error(err) {
+    console.error('error with websocket ', err);
+});
 
 function signMessage(secret, message) {
-    var key = Buffer(secret, 'base64');
+    var key = Buffer.from(secret, 'base64');
     var hmac = crypto.createHmac('sha512', key);
     var signature = hmac.update(message).digest('base64');
     return signature;
